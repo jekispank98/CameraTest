@@ -11,8 +11,11 @@ import android.view.ViewGroup
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.jmtgroup.cameratest.R
 import com.jmtgroup.cameratest.databinding.FragmentCameraBinding
@@ -49,7 +52,7 @@ class CameraFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initExecutor()
-        configureCameraController()
+        configureCamera()
         initImageCapture()
         setListeners()
     }
@@ -58,12 +61,28 @@ class CameraFragment : Fragment() {
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
-    private fun configureCameraController() {
-        val previewView: PreviewView = binding.cameraPreview
-        cameraController = LifecycleCameraController(requireContext())
-        cameraController?.bindToLifecycle(this)
-        cameraController?.cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-        previewView.controller = cameraController
+    private fun configureCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
+        cameraProviderFuture.addListener({
+            val cameraProvider = cameraProviderFuture.get()
+
+            val preview = Preview.Builder().build().also {
+                it.surfaceProvider = binding.cameraPreview.surfaceProvider
+            }
+            imageCapture = ImageCapture.Builder().build()
+
+            try {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(
+                    this,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview,
+                    imageCapture
+                )
+            } catch (exc: Exception) {
+                Log.e(TAG, "Use case binding failed", exc)
+            }
+        }, ContextCompat.getMainExecutor(requireContext()))
     }
 
     private fun initImageCapture() {
@@ -79,26 +98,31 @@ class CameraFragment : Fragment() {
             val contentValues = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, name)
                 put(MediaStore.MediaColumns.MIME_TYPE, PHOTO_TYPE)
-                if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
                     val appName = requireContext().resources.getString(R.string.app_name)
                     put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/${appName}")
                 }
             }
             val outputOptions = ImageCapture.OutputFileOptions
-                .Builder(requireContext().contentResolver,
+                .Builder(
+                    requireContext().contentResolver,
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    contentValues)
+                    contentValues
+                )
                 .build()
             cameraExecutor?.let { executor ->
-                imageCapture?.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback{
-                    override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                        Log.d(TAG, "Saving is started")
-                    }
+                imageCapture?.takePicture(
+                    outputOptions,
+                    executor,
+                    object : ImageCapture.OnImageSavedCallback {
+                        override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                            Log.d(TAG, "Saving is started")
+                        }
 
-                    override fun onError(exception: ImageCaptureException) {
-                        Log.d(TAG, "Error is happened")
-                    }
-                })
+                        override fun onError(exception: ImageCaptureException) {
+                            Log.d(TAG, "Error is happened. Error: ${exception.message}")
+                        }
+                    })
             }
         }
     }
