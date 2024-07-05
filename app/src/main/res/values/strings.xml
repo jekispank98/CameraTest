@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">CameraTest</string>
+    <string name="take_photo">Take photo</string>
+    <string name="permission_request_denied">Permission request denied</string>
+</resources>

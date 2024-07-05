@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--Font size-->
+    <dimen name="text_size_small">10sp</dimen>
+    <dimen name="text_size_medium">16sp</dimen>
+    <dimen name="text_size_large">20sp</dimen>
+
+    <!--Size (margin/padding)-->
+    <dimen name="size_small">8dp</dimen>
+    <dimen name="size_medium">12dp</dimen>
+    <dimen name="size_large">24dp</dimen>
+
+    <!--Size (rounded buttons)-->
+    <dimen name="round_button_small">32dp</dimen>
+    <dimen name="round_button_medium">64dp</dimen>
+    <dimen name="round_button_large">92dp</dimen>
+</resources>
