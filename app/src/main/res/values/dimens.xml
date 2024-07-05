@@ -9,6 +9,7 @@
     <dimen name="size_small">8dp</dimen>
     <dimen name="size_medium">12dp</dimen>
     <dimen name="size_large">24dp</dimen>
+    <dimen name="size_xxlarge">128dp</dimen>
 
     <!--Size (rounded buttons)-->
     <dimen name="round_button_small">32dp</dimen>

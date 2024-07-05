@@ -22,7 +22,7 @@ class SplashFragment: Fragment() {
     companion object {
         private var PERMISSIONS_REQUIRED = arrayOf(
             Manifest.permission.CAMERA,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
+//            Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
         fun hasPermissions(context: Context) = PERMISSIONS_REQUIRED.all {
             ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
@@ -43,11 +43,11 @@ class SplashFragment: Fragment() {
     }
 
     private fun checkPermissions() {
-//        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-//            val permissionList = PERMISSIONS_REQUIRED.toMutableList()
-//            permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-//            PERMISSIONS_REQUIRED = permissionList.toTypedArray()
-//        }
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            val permissionList = PERMISSIONS_REQUIRED.toMutableList()
+            permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            PERMISSIONS_REQUIRED = permissionList.toTypedArray()
+        }
         if (!hasPermissions(requireContext())) {
             activityResultLauncher.launch(PERMISSIONS_REQUIRED)
         } else { navigateToCamera() }

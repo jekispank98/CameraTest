@@ -19,4 +19,11 @@
         android:layout_marginBottom="@dimen/size_large"
         android:background="@drawable/button_camera" />
 
+    <ImageView
+        android:id="@+id/preview_image"
+        android:layout_width="@dimen/size_xxlarge"
+        android:layout_height="@dimen/size_xxlarge"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/size_medium"/>
+
 </FrameLayout>
