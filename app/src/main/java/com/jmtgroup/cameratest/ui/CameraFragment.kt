@@ -1,6 +1,8 @@
 package com.jmtgroup.cameratest.ui
 
 import android.content.ContentValues
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -13,13 +15,13 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.LifecycleCameraController
-import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.jmtgroup.cameratest.R
 import com.jmtgroup.cameratest.databinding.FragmentCameraBinding
-import java.io.File
+import com.jmtgroup.cameratest.vibrate
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.ExecutorService
@@ -29,15 +31,15 @@ class CameraFragment : Fragment() {
     private var _binding: FragmentCameraBinding? = null
     private val binding get() = _binding!!
     private var cameraExecutor: ExecutorService? = null
-    private var cameraController: LifecycleCameraController? = null
     private var imageCapture: ImageCapture? = null
-    private val outputDirectory: File? = null
 
 
     companion object {
         const val DATE_NAME = "yyyy-MM-HH-mm-ss-SSS"
         private const val PHOTO_TYPE = "image/jpeg"
         private const val TAG = "CameraX"
+        const val ANIMATION_FAST_MILLIS = 50L
+        const val ANIMATION_SLOW_MILLIS = 100L
     }
 
     override fun onCreateView(
@@ -53,7 +55,6 @@ class CameraFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         initExecutor()
         configureCamera()
-        initImageCapture()
         setListeners()
     }
 
@@ -85,12 +86,6 @@ class CameraFragment : Fragment() {
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
-    private fun initImageCapture() {
-        imageCapture = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-            .build()
-    }
-
     private fun setListeners() {
         binding.cameraCaptureButton.setOnClickListener {
             val name = SimpleDateFormat(DATE_NAME, Locale.US)
@@ -103,6 +98,7 @@ class CameraFragment : Fragment() {
                     put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/${appName}")
                 }
             }
+            Log.d(TAG, "Content values: $contentValues")
             val outputOptions = ImageCapture.OutputFileOptions
                 .Builder(
                     requireContext().contentResolver,
@@ -116,16 +112,37 @@ class CameraFragment : Fragment() {
                     executor,
                     object : ImageCapture.OnImageSavedCallback {
                         override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                            Log.d(TAG, "Saving is started")
+                            val savedUri = outputFileResults.savedUri
+                            Log.d(TAG, "Photo capture succeeded: $savedUri")
+                            vibrate(requireContext())
+                            setGalleryThumbnail(savedUri.toString())
                         }
 
                         override fun onError(exception: ImageCaptureException) {
                             Log.d(TAG, "Error is happened. Error: ${exception.message}")
                         }
                     })
+                binding.root.postDelayed({
+                    binding.root.foreground = ColorDrawable(Color.WHITE)
+                    binding.root.postDelayed(
+                        { binding.root.foreground = null }, ANIMATION_FAST_MILLIS)
+                }, ANIMATION_SLOW_MILLIS)
             }
         }
     }
+
+    private fun setGalleryThumbnail(filename: String) {
+        binding.previewImage.let { preview ->
+            preview.post {
+                Glide.with(preview)
+                    .load(filename)
+                    .apply(RequestOptions.circleCropTransform())
+                    .into(preview)
+            }
+        }
+    }
+
+
 
     override fun onDestroyView() {
         super.onDestroyView()

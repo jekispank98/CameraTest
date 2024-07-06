@@ -22,7 +22,7 @@ class SplashFragment: Fragment() {
     companion object {
         private var PERMISSIONS_REQUIRED = arrayOf(
             Manifest.permission.CAMERA,
-//            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            Manifest.permission.VIBRATE
         )
         fun hasPermissions(context: Context) = PERMISSIONS_REQUIRED.all {
             ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
